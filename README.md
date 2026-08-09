@@ -1,10 +1,11 @@
 ```markdown
 # 🇸🇳 Olympic Management System
 
-[![Laravel Version](https://img.shields.io/badge/Laravel-10.x%20%2F%2011.x-FF2D20?style=for-the-badge&logo=laravel)](https://laravel.com)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.x-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com)
-[![PHP Version](https://img.shields.io/badge/PHP-%E2%89%A5%208.1-777BB4?style=for-the-badge&logo=php)](https://www.php.net)
-[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](#)
+![Laravel Version](https://img.shields.io/badge/Laravel-10.x%20%2F%2011.x-FF2D20?style=for-the-badge&logo=laravel) - (https://laravel.com)
+![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
+![PHP Version](https://img.shields.io/badge/PHP-%E2%89%A5%208.1-777BB4?style=for-the-badge&logo=php) - (https://www.php.net)
+![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Licence](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
 ---
 
