@@ -73,7 +73,7 @@ La plateforme permet de gérer les athlètes, les disciplines, les épreuves, le
 1. Cloner le projet :
    ```bash
    git clone [https://github.com/mamadou-adiouma/olympic-management-system-backend.git]
-   cd olympic-management-system-backend.git
+   cd olympic-management-system
    ```
 
 2. Installer les dépendances PHP :
@@ -116,7 +116,7 @@ L’API sera accessible sur `http://localhost:8000`.
 1. Cloner le projet :
    ```bash
    git clone [https://github.com/mamadou-adiouma/olympic-management-system-frontend.git]
-   cd olympic-management-system-frontend
+   cd olympic-management-system
    ```
 
 2. Se placer dans le dossier frontend :
