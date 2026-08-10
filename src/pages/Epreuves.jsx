@@ -283,7 +283,7 @@ export default function Epreuves() {
                                                 {e.discipline?.nom || disciplines.find(d => String(d.id) === String(e.discipline_id))?.nom || '-'}
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className={`inline-flex items-center justify-center w-6 h-6 rounded text-xs font-bold ${e.sexe === 'H' ? 'bg-sky-100 text-sky-700' :
+                                                <span className={`inline-flex items-center justify-center px-2 min-w-10 min-h-6 rounded text-xs font-bold ${e.sexe === 'H' ? 'bg-sky-100 text-sky-700' :
                                                     e.sexe === 'F' ? 'bg-pink-100 text-pink-700' : 'bg-purple-100 text-purple-700'
                                                     }`}>
                                                     {e.sexe || 'H'}
@@ -401,7 +401,7 @@ export default function Epreuves() {
                                         >
                                             <option value="H">Homme (H)</option>
                                             <option value="F">Femme (F)</option>
-                                            <option value="M">Mixte (M)</option>
+                                            <option value="Mixte">Mixte</option>
                                         </select>
                                     </div>
                                     <div>

@@ -134,6 +134,8 @@ export default function Athletes() {
         }
     };
 
+    const CONTINENTS = ['Afrique', 'Amériques', 'Asie', 'Europe', 'Océanie'];
+
     return (
         <section>
             <Navbar title="Athlètes" />
@@ -268,7 +270,7 @@ export default function Athletes() {
                     <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50 rounded-xl">
                         <div className="bg-white rounded-xl shadow-xl w-full max-w-xl space-y-4 p-0.5">
                             <div className="bg-[#1a2f5e] rounded-t-lg flex items-center justify-between border-b p-4 px-6">
-                                <h3 className="text-lg font-bold text-slate-800">
+                                <h3 className="text-lg font-bold text-slate-200">
                                     {editingAthlete ? 'Modifier l\'athlète' : 'Ajouter un athlète'}
                                     <p className="text-[10px] text-white/50">Nouveau dossier athlète · Dakar 2026</p>
                                 </h3>
@@ -354,7 +356,7 @@ export default function Athletes() {
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3">
+                                <div className="grid grid-cols-3 gap-3">
                                     <div>
                                         <label className="uppercase block text-xs font-semibold text-slate-600 mb-1">Nationalité</label>
                                         <input
@@ -375,6 +377,20 @@ export default function Athletes() {
                                             onChange={(e) => setFormData({ ...formData, iso_pays: e.target.value.toUpperCase() })}
                                             className="w-full px-3 py-2 bg-[#edf0f7] border border-slate-200 rounded-sm focus:ring-1 focus:ring-[#c9a227] outline-none"
                                         />
+                                    </div>
+                                    <div>
+                                        <label className="uppercase block text-xs font-semibold text-slate-600 mb-1">CONTINENT</label>
+                                        <select
+                                            value={formData.continent}
+                                            onChange={(e) => setFormData({ ...formData, continent: e.target.value })}
+                                            className="w-full px-3 py-2 bg-[#edf0f7] border border-slate-200 rounded-sm focus:ring-1 focus:ring-[#c9a227] outline-none"
+                                            required
+                                        >
+                                            <option value="">Sélectionner un continent</option>
+                                            {CONTINENTS.map((c) => (
+                                                <option key={c} value={c}>{c}</option>
+                                            ))}
+                                        </select>
                                     </div>
                                 </div>
 

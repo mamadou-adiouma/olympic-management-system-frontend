@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import Navbar from '../components/Layout/Navbar';
 import Toast from '../components/Common/Toast';
-import { Search, Plus, X, Medal } from 'lucide-react';
+import { Search, Plus, X, Medal, Globe, MapPin } from 'lucide-react';
 
 export default function Resultats() {
     const [resultatsGroupes, setResultatsGroupes] = useState([]);
@@ -32,6 +32,8 @@ export default function Resultats() {
         est_record_mondial: false
     });
 
+    const [selectedAthlete, setSelectedAthlete] = useState(null);
+
     useEffect(() => {
         fetchResultats();
         fetchEpreuvesAndAthletes();
@@ -48,8 +50,11 @@ export default function Resultats() {
                 api.get('/epreuves'),
                 api.get('/athletes')
             ]);
-            setEpreuves(resEpreuves.data?.data || resEpreuves.data || []);
-            setAthletes(resAthletes.data?.data || resAthletes.data || []);
+            const listEpreuves = resEpreuves.data?.data || resEpreuves.data || [];
+            const listAthletes = resAthletes.data?.data || resAthletes.data || [];
+
+            setEpreuves(listEpreuves);
+            setAthletes(listAthletes);
         } catch (err) {
             console.error('Erreur chargement épreuves/athlètes', err);
         }
@@ -80,6 +85,7 @@ export default function Resultats() {
                             rang: i.rang,
                             athlete: `${i.athlete?.prenom || ''} ${i.athlete?.nom || ''}`,
                             pays: i.athlete?.iso_pays || i.athlete?.nationalite || '',
+                            continent: i.athlete?.continent || i.athlete?.pays?.continent || '',
                             perf: i.performance,
                             medaille: i.medaille
                         }))
@@ -115,23 +121,50 @@ export default function Resultats() {
     };
 
     const handleOpenModal = () => {
+        const defaultEpreuveId = epreuves[0]?.id || '';
+        const defaultAthlete = athletes[0] || null;
+
         setFormData({
-            epreuve_id: epreuves[0]?.id || '',
-            athlete_id: athletes[0]?.id || '',
+            epreuve_id: defaultEpreuveId,
+            athlete_id: defaultAthlete?.id || '',
             rang: 1,
             performance: '',
             medaille: 'OR',
             est_record_olympique: false,
             est_record_mondial: false
         });
+        setSelectedAthlete(defaultAthlete);
         setIsModalOpen(true);
+    };
+
+    const handleAthleteChange = (athleteId) => {
+        const foundAthlete = athletes.find(a => String(a.id) === String(athleteId));
+        setSelectedAthlete(foundAthlete || null);
+        setFormData(prev => ({
+            ...prev,
+            athlete_id: athleteId
+        }));
+    };
+
+    const handleRangChange = (val) => {
+        const rangVal = parseInt(val) || 1;
+        let med = 'AUCUNE';
+        if (rangVal === 1) med = 'OR';
+        else if (rangVal === 2) med = 'ARGENT';
+        else if (rangVal === 3) med = 'BRONZE';
+
+        setFormData(prev => ({
+            ...prev,
+            rang: rangVal,
+            medaille: med
+        }));
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
             await api.post('/resultats', formData);
-            showToast('Résultat enregistré avec succès');
+            showToast('Résultat et attribution de médaille enregistrés avec succès');
             setIsModalOpen(false);
             fetchResultats();
         } catch (err) {
@@ -154,37 +187,16 @@ export default function Resultats() {
         return matchesSearch && matchesDiscipline;
     });
 
-    // STYLES PERSONNALISES DES MEDAILLES SELON LE RANG
     const getMedalBadgeConfig = (rang) => {
         switch (rang) {
             case 1:
-                return {
-                    badgeBg: 'bg-amber-400',
-                    iconColor: 'text-amber-800',
-                    labelColor: 'text-amber-600',
-                    labelText: '1ER'
-                };
+                return { badgeBg: 'bg-amber-400', iconColor: 'text-amber-800', labelColor: 'text-amber-600', labelText: '1ER' };
             case 2:
-                return {
-                    badgeBg: 'bg-slate-300',
-                    iconColor: 'text-slate-600',
-                    labelColor: 'text-slate-500',
-                    labelText: '2ÈME'
-                };
+                return { badgeBg: 'bg-slate-300', iconColor: 'text-slate-600', labelColor: 'text-slate-500', labelText: '2ÈME' };
             case 3:
-                return {
-                    badgeBg: 'bg-amber-700',
-                    iconColor: 'text-amber-100',
-                    labelColor: 'text-amber-700',
-                    labelText: '3ÈME'
-                };
+                return { badgeBg: 'bg-amber-700', iconColor: 'text-amber-100', labelColor: 'text-amber-700', labelText: '3ÈME' };
             default:
-                return {
-                    badgeBg: 'bg-slate-200',
-                    iconColor: 'text-slate-500',
-                    labelColor: 'text-slate-400',
-                    labelText: `${rang}E`
-                };
+                return { badgeBg: 'bg-slate-200', iconColor: 'text-slate-500', labelColor: 'text-slate-400', labelText: `${rang}E` };
         }
     };
 
@@ -201,32 +213,31 @@ export default function Resultats() {
                 <div className="flex justify-between items-center">
                     <div>
                         <h1 className="text-2xl font-bold text-slate-800">Gestion des Résultats · Dakar 2026</h1>
-                        <p className="text-slate-500 text-xs">Ajoutez des résultats, attribuez des médailles.</p>
+                        <p className="text-slate-500 text-xs">Saisissez les résultats et attribuez automatiquement les médailles par athlète et pays.</p>
                     </div>
                 </div>
 
+                {/* KPI METRICS */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="bg-white p-5 rounded-xl border-t-4 border-slate-700 border-x border-b shadow-sm">
                         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">ÉPREUVES TERMINÉES</p>
                         <p className="text-3xl font-bold text-slate-800 mt-2">{stats.epreuveTerminees}</p>
                     </div>
-
                     <div className="bg-white p-5 rounded-xl border-t-4 border-rose-500 border-x border-b shadow-sm">
                         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">RECORDS MONDIAUX</p>
                         <p className="text-3xl font-bold text-rose-500 mt-2">{stats.recordsMondiaux}</p>
                     </div>
-
                     <div className="bg-white p-5 rounded-xl border-t-4 border-amber-500 border-x border-b shadow-sm">
                         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">RECORDS OLYMPIQUES</p>
                         <p className="text-3xl font-bold text-amber-500 mt-2">{stats.recordsOlympiques}</p>
                     </div>
-
                     <div className="bg-white p-5 rounded-xl border-t-4 border-emerald-500 border-x border-b shadow-sm">
                         <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">MÉDAILLES ATTRIBUÉES</p>
                         <p className="text-3xl font-bold text-emerald-500 mt-2">{stats.medaillesAttribuees}</p>
                     </div>
                 </div>
 
+                {/* FILTRES ET ACTION */}
                 <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
                     <button
                         onClick={handleOpenModal}
@@ -252,7 +263,7 @@ export default function Resultats() {
                         onChange={(e) => setDisciplineFilter(e.target.value)}
                         className="bg-[#edf0f7]/60 border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 focus:outline-none"
                     >
-                        <option value="">Toutes</option>
+                        <option value="">Toutes disciplines</option>
                         {disciplinesUniques.map((d, idx) => (
                             <option key={idx} value={d}>{d}</option>
                         ))}
@@ -263,6 +274,7 @@ export default function Resultats() {
                     </p>
                 </div>
 
+                {/* LISTE DES RÉSULTATS */}
                 {loading ? (
                     <div className="bg-white rounded-xl p-8 text-center text-slate-400 border border-slate-200 shadow-sm">
                         Chargement des résultats...
@@ -295,7 +307,6 @@ export default function Resultats() {
                                     </div>
                                 </div>
 
-                                {/* PODIUM (BARRETTES) DES MEDAILLE */}
                                 <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-100 p-2">
                                     {res.podium.map((p) => {
                                         const medalConfig = getMedalBadgeConfig(p.rang);
@@ -330,13 +341,13 @@ export default function Resultats() {
                     </div>
                 )}
 
-                {/* MODAL DE SAISIE DES RESULATS (RESULTATS) */}
+                {/* MODAL DE SAISIE AVEC DÉTECTION AUTOMATIQUE DU PAYS/CONTINENT */}
                 {isModalOpen && (
                     <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
                         <div className="bg-white rounded-xl shadow-xl w-full max-w-lg space-y-4 p-0.5 overflow-hidden">
                             <div className="bg-[#1a2f5e] rounded-t-lg flex items-center justify-between border-b p-4 px-6">
                                 <div>
-                                    <h3 className="text-lg font-bold text-white">Saisir un résultat</h3>
+                                    <h3 className="text-lg font-bold text-white">Saisir un résultat & Attribution</h3>
                                     <p className="text-[10px] text-white/50">Résultats officiels · Dakar 2026</p>
                                 </div>
                                 <button
@@ -354,11 +365,11 @@ export default function Resultats() {
                                         required
                                         value={formData.epreuve_id}
                                         onChange={(e) => setFormData({ ...formData, epreuve_id: e.target.value })}
-                                        className="w-full px-3 py-2 bg-[#edf0f7] border border-slate-200 rounded-sm focus:ring-1 focus:ring-[#c9a227] outline-none"
+                                        className="w-full px-3 py-2 bg-[#edf0f7] border border-slate-200 rounded-lg focus:ring-1 focus:ring-[#c9a227] outline-none"
                                     >
                                         <option value="">Sélectionner une épreuve</option>
                                         {epreuves.map((e) => (
-                                            <option key={e.id} value={e.id}>{e.nom} ({e.code})</option>
+                                            <option key={e.id} value={e.id}>{e.nom} ({e.code || e.discipline?.nom})</option>
                                         ))}
                                     </select>
                                 </div>
@@ -368,15 +379,52 @@ export default function Resultats() {
                                     <select
                                         required
                                         value={formData.athlete_id}
-                                        onChange={(e) => setFormData({ ...formData, athlete_id: e.target.value })}
-                                        className="w-full px-3 py-2 bg-[#edf0f7] border border-slate-200 rounded-sm focus:ring-1 focus:ring-[#c9a227] outline-none"
+                                        onChange={(e) => handleAthleteChange(e.target.value)}
+                                        className="w-full px-3 py-2 bg-[#edf0f7] border border-slate-200 rounded-lg focus:ring-1 focus:ring-[#c9a227] outline-none"
                                     >
                                         <option value="">Sélectionner un athlète</option>
                                         {athletes.map((a) => (
-                                            <option key={a.id} value={a.id}>{a.prenom} {a.nom} ({a.nationalite || a.iso_pays})</option>
+                                            <option key={a.id} value={a.id}>
+                                                {a.prenom} {a.nom} ({a.nationalite || a.iso_pays || 'N/A'})
+                                            </option>
                                         ))}
                                     </select>
                                 </div>
+
+                                {/* BLOC INFOS DÉDUITES DE L'ATHLÈTE (PAYS, CONTINENT, MÉDAILLE DÉDUITE) */}
+                                {selectedAthlete && (
+                                    <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 grid grid-cols-3 gap-2 text-xs">
+                                        <div className="flex items-center gap-1.5">
+                                            <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                                            <div>
+                                                <span className="block text-[10px] text-slate-400 font-bold uppercase">Pays</span>
+                                                <span className="font-bold text-slate-700">
+                                                    {selectedAthlete.pays?.nom || selectedAthlete.nationalite || selectedAthlete.iso_pays || 'Inconnu'}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-1.5">
+                                            <Globe className="w-3.5 h-3.5 text-slate-400" />
+                                            <div>
+                                                <span className="block text-[10px] text-slate-400 font-bold uppercase">Continent</span>
+                                                <span className="font-bold text-slate-700">
+                                                    {selectedAthlete.continent || selectedAthlete.pays?.continent || 'Inconnu'}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-1.5">
+                                            <Medal className="w-3.5 h-3.5 text-amber-500" />
+                                            <div>
+                                                <span className="block text-[10px] text-slate-400 font-bold uppercase">Médaille</span>
+                                                <span className="font-extrabold text-[#c9a227]">
+                                                    {formData.medaille}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div className="grid grid-cols-3 gap-3">
                                     <div>
@@ -386,23 +434,17 @@ export default function Resultats() {
                                             min="1"
                                             required
                                             value={formData.rang}
-                                            onChange={(e) => {
-                                                const val = parseInt(e.target.value) || 1;
-                                                let med = 'AUCUNE';
-                                                if (val === 1) med = 'OR';
-                                                else if (val === 2) med = 'ARGENT';
-                                                else if (val === 3) med = 'BRONZE';
-                                                setFormData({ ...formData, rang: val, medaille: med });
-                                            }}
-                                            className="w-full px-3 py-2 bg-[#edf0f7] border border-slate-200 rounded-sm focus:ring-1 focus:ring-[#c9a227] outline-none"
+                                            onChange={(e) => handleRangChange(e.target.value)}
+                                            className="w-full px-3 py-2 bg-[#edf0f7] border border-slate-200 rounded-lg focus:ring-1 focus:ring-[#c9a227] outline-none"
                                         />
                                     </div>
+
                                     <div>
                                         <label className="uppercase block text-xs font-semibold text-slate-600 mb-1">Médaille</label>
                                         <select
                                             value={formData.medaille}
                                             onChange={(e) => setFormData({ ...formData, medaille: e.target.value })}
-                                            className="w-full px-3 py-2 bg-[#edf0f7] border border-slate-200 rounded-sm focus:ring-1 focus:ring-[#c9a227] outline-none"
+                                            className="w-full px-3 py-2 bg-[#edf0f7] border border-slate-200 rounded-lg focus:ring-1 focus:ring-[#c9a227] outline-none font-bold text-slate-700"
                                         >
                                             <option value="OR">OR</option>
                                             <option value="ARGENT">ARGENT</option>
@@ -410,6 +452,7 @@ export default function Resultats() {
                                             <option value="AUCUNE">AUCUNE</option>
                                         </select>
                                     </div>
+
                                     <div>
                                         <label className="uppercase block text-xs font-semibold text-slate-600 mb-1">Performance</label>
                                         <input
@@ -418,7 +461,7 @@ export default function Resultats() {
                                             placeholder="ex: 9.72s"
                                             value={formData.performance}
                                             onChange={(e) => setFormData({ ...formData, performance: e.target.value })}
-                                            className="w-full px-3 py-2 bg-[#edf0f7] border border-slate-200 rounded-sm focus:ring-1 focus:ring-[#c9a227] outline-none"
+                                            className="w-full px-3 py-2 bg-[#edf0f7] border border-slate-200 rounded-lg focus:ring-1 focus:ring-[#c9a227] outline-none"
                                         />
                                     </div>
                                 </div>
@@ -454,7 +497,7 @@ export default function Resultats() {
                                     </button>
                                     <button
                                         type="submit"
-                                        className="px-4 py-2 bg-[#1a2f5e] hover:bg-slate-800 text-white rounded-lg transition"
+                                        className="px-4 py-2 bg-[#1a2f5e] hover:bg-slate-800 text-white rounded-lg transition font-semibold"
                                     >
                                         Enregistrer
                                     </button>

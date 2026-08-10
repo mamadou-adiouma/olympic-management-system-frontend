@@ -199,7 +199,7 @@ export default function Disciplines() {
                                         </div>
                                     </div>
 
-                                    <div className="border-t border-slate-100 mt-4 pt-3 flex items-end justify-between">
+                                    <div className="border-t border-slate-300 mt-4 pt-3 flex items-end justify-between">
                                         <div className="flex gap-6">
                                             <div>
                                                 <span className="block text-lg font-extrabold text-slate-800 leading-none">

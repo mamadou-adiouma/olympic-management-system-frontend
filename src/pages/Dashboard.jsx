@@ -186,7 +186,7 @@ export default function Dashboard() {
                 <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
                     <div>
                         <h2 className="text-lg font-bold text-[#1a2f5e]">Classement des pays</h2>
-                        <p className="text-xs text-slate-400 mt-0.5">Or ×7 · Argent ×4 · Bronze ×1</p>
+                        <p className="text-xs text-slate-400 mt-0.5">Or ×{medaillesOr} · Argent ×{medaillesArgent} · Bronze ×{medaillesBronze}</p>
                     </div>
 
                     <div className="mt-4 overflow-x-auto">

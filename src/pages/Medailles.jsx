@@ -11,6 +11,7 @@ export default function Medailles() {
 
     const [search, setSearch] = useState('');
     const [continentFilter, setContinentFilter] = useState('');
+    const [medalFilter, setMedalFilter] = useState('ALL'); // ALL, GOLD, SILVER, BRONZE
     const [sortBy, setSortBy] = useState('gold');
 
     const [stats, setStats] = useState({
@@ -27,7 +28,8 @@ export default function Medailles() {
         pays_id: '',
         type_medaille: 'OR',
         epreuve_nom: '',
-        athlete_nom: ''
+        athlete_nom: '',
+        continent: 'Afrique'
     });
 
     useEffect(() => {
@@ -75,13 +77,26 @@ export default function Medailles() {
     };
 
     const handleOpenModal = () => {
+        const firstCountry = countries[0];
         setFormData({
-            pays_id: countries[0]?.id || '',
+            pays_id: firstCountry?.id || '',
             type_medaille: 'OR',
             epreuve_nom: '',
-            athlete_nom: ''
+            athlete_nom: '',
+            continent: firstCountry?.continent || 'Afrique'
         });
         setIsModalOpen(true);
+    };
+
+    const handleCountryChange = (e) => {
+        const selectedId = e.target.value;
+        const selectedCountry = countries.find(c => String(c.id) === String(selectedId));
+
+        setFormData(prev => ({
+            ...prev,
+            pays_id: selectedId,
+            continent: selectedCountry?.continent || prev.continent
+        }));
     };
 
     const handleSubmit = async (e) => {
@@ -93,6 +108,22 @@ export default function Medailles() {
             fetchData();
         } catch (err) {
             showToast("Erreur lors de l'attribution de la médaille", 'error');
+        }
+    };
+
+    const getContinentBadgeClass = (continent) => {
+        switch (continent) {
+            case 'Amériques':
+                return 'bg-pink-100 text-pink-700';
+            case 'Asie':
+                return 'bg-amber-100 text-amber-700';
+            case 'Europe':
+                return 'bg-sky-100 text-sky-700';
+            case 'Océanie':
+                return 'bg-purple-100 text-purple-700';
+            case 'Afrique':
+            default:
+                return 'bg-emerald-100 text-emerald-700';
         }
     };
 
@@ -125,7 +156,13 @@ export default function Medailles() {
             const matchesSearch = item.nomPays.toLowerCase().includes(search.toLowerCase()) ||
                 item.isoPays.toLowerCase().includes(search.toLowerCase());
             const matchesContinent = continentFilter ? item.continent === continentFilter : true;
-            return matchesSearch && matchesContinent;
+
+            let matchesMedal = true;
+            if (medalFilter === 'GOLD') matchesMedal = item.gold > 0;
+            if (medalFilter === 'SILVER') matchesMedal = item.silver > 0;
+            if (medalFilter === 'BRONZE') matchesMedal = item.bronze > 0;
+
+            return matchesSearch && matchesContinent && matchesMedal;
         })
         .sort((a, b) => {
             if (sortBy === 'gold') {
@@ -201,19 +238,7 @@ export default function Medailles() {
                     </div>
                 </div>
 
-
                 <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
-
-                    {/* FONCTIONALITE (ATTRIBUTION MEDAILLE) DESACTIVE */}
-
-                    {/* <button
-                    onClick={handleOpenModal}
-                    className="bg-[#1a2f5e] text-white px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2 hover:bg-slate-800 transition shadow-sm"
-                >
-                    <Plus className="w-4 h-4" />
-                    <span>Attribuer une médaille</span>
-                </button> */}
-
                     <div className="relative flex-1 min-w-50">
                         <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                         <input
@@ -236,27 +261,52 @@ export default function Medailles() {
                         ))}
                     </select>
 
-                    <div className="flex items-center bg-[#edf0f7] p-1 rounded-lg border border-slate-200 text-xs font-semibold">
-                        <button
+                    {/* Groupe de boutons d'action : Tri & Filtres par médaille */}
+                    <div className="flex items-center flex-wrap gap-1 bg-[#edf0f7] p-1 rounded-lg border border-slate-200 text-xs font-semibold">
+                        {/* <button
                             onClick={() => setSortBy('gold')}
-                            className={`px-3 py-1.5 rounded-md transition ${sortBy === 'gold' ? 'bg-[#1a2f5e] text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
-                                }`}
+                            className={`px-3 py-1.5 rounded-md transition ${sortBy === 'gold' ? 'bg-[#1a2f5e] text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
                         >
                             Or d'abord
                         </button>
                         <button
                             onClick={() => setSortBy('points')}
-                            className={`px-3 py-1.5 rounded-md transition ${sortBy === 'points' ? 'bg-[#1a2f5e] text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
-                                }`}
+                            className={`px-3 py-1.5 rounded-md transition ${sortBy === 'points' ? 'bg-[#1a2f5e] text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
                         >
                             Points (Or×7, Ag×4, Br×1)
                         </button>
                         <button
                             onClick={() => setSortBy('total')}
-                            className={`px-3 py-1.5 rounded-md transition ${sortBy === 'total' ? 'bg-[#1a2f5e] text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'
-                                }`}
+                            className={`px-3 py-1.5 rounded-md transition ${sortBy === 'total' ? 'bg-[#1a2f5e] text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
                         >
                             Total médailles
+                        </button> */}
+
+                        <div className="h-4 w-px bg-slate-300 mx-1"></div>
+
+                        <button
+                            onClick={() => setMedalFilter('ALL')}
+                            className={`px-3 py-1.5 rounded-md transition ${medalFilter === 'ALL' ? 'bg-[#1a2f5e] text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+                        >
+                            Total médailles
+                        </button>
+                        <button
+                            onClick={() => setMedalFilter('GOLD')}
+                            className={`px-3 py-1.5 rounded-md transition ${medalFilter === 'GOLD' ? 'bg-amber-500 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+                        >
+                            Or d'abord
+                        </button>
+                        <button
+                            onClick={() => setMedalFilter('SILVER')}
+                            className={`px-3 py-1.5 rounded-md transition ${medalFilter === 'SILVER' ? 'bg-slate-500 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+                        >
+                            Avec Argent
+                        </button>
+                        <button
+                            onClick={() => setMedalFilter('BRONZE')}
+                            className={`px-3 py-1.5 rounded-md transition ${medalFilter === 'BRONZE' ? 'bg-amber-700 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+                        >
+                            Avec Bronze
                         </button>
                     </div>
                 </div>
@@ -338,7 +388,7 @@ export default function Medailles() {
                                                 </td>
                                                 <td className="py-3.5 px-4">
                                                     {item.continent ? (
-                                                        <span className="bg-rose-50 text-rose-600 text-[11px] font-bold px-2 py-0.5 rounded-full">
+                                                        <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${getContinentBadgeClass(item.continent)}`}>
                                                             {item.continent}
                                                         </span>
                                                     ) : (
@@ -370,7 +420,6 @@ export default function Medailles() {
                     )}
                 </div>
 
-                {/* MODAL D'ATTRIBUTION MEDAILLE (MEDAILLE) - DESACTIVE */}
                 {isModalOpen && (
                     <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
                         <div className="bg-white rounded-xl shadow-xl w-full max-w-lg space-y-4 p-0.5 overflow-hidden">
@@ -393,17 +442,34 @@ export default function Medailles() {
                                     <select
                                         required
                                         value={formData.pays_id}
-                                        onChange={(e) => setFormData({ ...formData, pays_id: e.target.value })}
+                                        onChange={handleCountryChange}
                                         className="w-full px-3 py-2 bg-[#edf0f7] border border-slate-200 rounded-sm focus:ring-1 focus:ring-[#c9a227] outline-none"
                                     >
                                         <option value="">Sélectionner un pays</option>
                                         {countries.map((c, idx) => (
-                                            <option key={c.id || idx} value={c.id}>{c.nom || c.nationalite} ({c.code_iso || c.iso_pays})</option>
+                                            <option key={c.id || idx} value={c.id}>
+                                                {c.nom || c.nationalite} ({c.code_iso || c.iso_pays})
+                                            </option>
                                         ))}
                                     </select>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="uppercase block text-xs font-semibold text-slate-600 mb-1">Continent</label>
+                                        <select
+                                            value={formData.continent}
+                                            onChange={(e) => setFormData({ ...formData, continent: e.target.value })}
+                                            className="w-full px-3 py-2 bg-[#edf0f7] border border-slate-200 rounded-sm focus:ring-1 focus:ring-[#c9a227] outline-none"
+                                        >
+                                            <option value="Afrique">Afrique</option>
+                                            <option value="Amériques">Amériques</option>
+                                            <option value="Asie">Asie</option>
+                                            <option value="Europe">Europe</option>
+                                            <option value="Océanie">Océanie</option>
+                                        </select>
+                                    </div>
+
                                     <div>
                                         <label className="uppercase block text-xs font-semibold text-slate-600 mb-1">Type de Médaille</label>
                                         <select
@@ -416,17 +482,18 @@ export default function Medailles() {
                                             <option value="BRONZE">BRONZE</option>
                                         </select>
                                     </div>
-                                    <div>
-                                        <label className="uppercase block text-xs font-semibold text-slate-600 mb-1">Épreuve</label>
-                                        <input
-                                            type="text"
-                                            required
-                                            placeholder="ex: 100m Hommes"
-                                            value={formData.epreuve_nom}
-                                            onChange={(e) => setFormData({ ...formData, epreuve_nom: e.target.value })}
-                                            className="w-full px-3 py-2 bg-[#edf0f7] border border-slate-200 rounded-sm focus:ring-1 focus:ring-[#c9a227] outline-none"
-                                        />
-                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="uppercase block text-xs font-semibold text-slate-600 mb-1">Épreuve</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        placeholder="ex: 100m Hommes"
+                                        value={formData.epreuve_nom}
+                                        onChange={(e) => setFormData({ ...formData, epreuve_nom: e.target.value })}
+                                        className="w-full px-3 py-2 bg-[#edf0f7] border border-slate-200 rounded-sm focus:ring-1 focus:ring-[#c9a227] outline-none"
+                                    />
                                 </div>
 
                                 <div>
